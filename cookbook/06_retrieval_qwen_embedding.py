@@ -78,40 +78,33 @@ For complex queries, the system can combine multiple retrieval methods to improv
     # ==================== 2. 运行Embedding检索 ====================
     print("\n[Step 2] 运行Qwen Embedding检索...")
     print(f"模型路径: {MODEL_PATH}")
-    print(f"数据目录: {DATA_DIR}")
+    print(f"问题: {sample_question}")
 
     try:
-        stats = retrieval.qwen_embedding(
+        # 使用新的API
+        extracted_text = retrieval.qwen_embedding_retrieve(
             model_path=MODEL_PATH,
-            data_path=str(DATA_DIR),
-            save_dir=str(DATA_DIR),
+            context_text=sample_context,
+            query=sample_question,
             top_k=5  # 返回Top-5句子
         )
 
-        # ==================== 3. 显示结果 ====================
+        # ==================== 3. 显示和保存结果 ====================
         print("\n[Step 3] 显示结果...")
         print("-" * 60)
 
-        print(f"\n检索统计:")
-        print(f"  总样本数: {stats.get('total', 0)}")
-        print(f"  成功: {stats.get('success', 0)}")
-        print(f"  失败: {stats.get('failed', 0)}")
+        print(f"\n提取的Top-5相关句子:")
+        print("-" * 60)
+        print(extracted_text)
+        print("-" * 60)
 
-        # 读取提取的证据
+        # 保存结果
         evidence_path = DATA_DIR / "extracted_evidence_qwen_embedding.txt"
-        if evidence_path.exists():
-            with open(evidence_path, 'r', encoding='utf-8') as f:
-                extracted_text = f.read()
+        with open(evidence_path, 'w', encoding='utf-8') as f:
+            f.write(extracted_text)
 
-            print(f"\n提取的Top-5相关句子:")
-            print("-" * 60)
-            lines = extracted_text.split('\n')
-            for i, line in enumerate(lines[:5], 1):
-                if line.strip():
-                    print(f"{i}. {line}")
-            print("-" * 60)
-
-        print("\n✓ 检索完成")
+        print(f"\n✓ 检索完成")
+        print(f"✓ 结果已保存到: {evidence_path}")
 
     except Exception as e:
         print(f"\n⚠ 检索过程出错: {e}")

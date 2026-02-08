@@ -162,10 +162,10 @@ def main():
 
     output_evidence_full_path = output_dir / "extracted_evidence_full.txt"
 
-    extracted_text_full, patch_bounds_full = retrieval.retrieve_by_attention(
+    extracted_text_full, patch_bounds_full = retrieval.attention_retrieve(
         attention_data=attention_data,
-        image_height=IMAGE_HEIGHT,
         image_width=IMAGE_WIDTH,
+        image_height=IMAGE_HEIGHT,
         word_mapping_path=str(word_mapping_path),
         top_k=TOP_K,
         output_path=str(output_evidence_full_path)

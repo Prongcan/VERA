@@ -1,6 +1,6 @@
 """
-VERA: Visual Evidence Retrieval and Analysis
-视觉证据检索与分析库
+VERA: Visual Evidence Retrieval Augmentation
+视觉证据检索增强库
 """
 
 __version__ = "0.1.0"

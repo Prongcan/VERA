@@ -30,7 +30,7 @@ def main():
     MODEL_PATH = "/data3/guofang/peirongcan/vllm_log/Qwen3-VL-8B-Instruct"
 
     # 示例图像路径（可以是本地路径或URL）
-    IMAGE_PATH = "cookbook/data/sample_image.png"
+    IMAGE_PATH = "cookbook/data/sample.png"
 
     # ==================== 1. 初始化模型 ====================
     print("\n[Step 1] 初始化Qwen3-VL模型...")
@@ -50,7 +50,7 @@ def main():
     prompt_context = "Please answer the question based on the document image provided."
 
     # 问题文本
-    question_text = "What is shown in this image?"
+    question_text = "How many robots are in the image?"
 
     # 图像路径列表
     image_paths = [IMAGE_PATH]
