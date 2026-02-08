@@ -1,0 +1,23 @@
+# VERA Cookbook Requirements
+
+# 核心依赖
+torch>=2.0.0
+transformers>=4.30.0
+numpy>=1.24.0
+opencv-python>=4.8.0
+pillow>=10.0.0
+
+# 可视化
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# 工具
+tqdm>=4.65.0
+
+# 可选依赖（用于ColPali检索）
+# colpali-engine
+
+# 注意事项：
+# 1. 确保已安装PyTorch，并且与你的CUDA版本兼容
+# 2. 某些示例需要GPU支持
+# 3. 模型文件需要单独下载，请修改脚本中的MODEL_PATH

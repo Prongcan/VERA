@@ -1,0 +1,49 @@
+Visual Evidence Retrieval Augmention (VERA)
+
+VERA is a comprehensive framework for visual document understanding and evidence retrieval. It combines large vision-language models with attention-based retrieval mechanisms to extract relevant information from document images.
+
+Key Features:
+• Multi-modal document understanding
+• Attention-based evidence retrieval
+• Visual-textual retrieval methods
+• Comprehensive analysis tools
+
+The framework supports various document types including academic papers, technical reports, and business documents. It can handle complex layouts and extract precise evidence for question answering tasks.
+
+Architecture Overview
+=====================
+
+The VERA framework consists of four main modules:
+
+1. Models Module (vera.models)
+   - Provides model initialization and inference
+   - Supports both standard and masked versions
+   - Captures attention weights during inference
+
+2. Rendering Module (vera.rendering)
+   - Converts text to document images
+   - Supports evidence highlighting
+   - Configurable fonts and layouts
+
+3. Retrieval Module (vera.retrieval)
+   - Attention-based retrieval
+   - Embedding-based retrieval
+   - Multiple retrieval strategies
+
+4. Analysis Module (vera.analysis)
+   - Heatmap generation
+   - Top-K patch extraction
+   - Full pipeline analysis
+
+Usage Example
+=============
+
+To use VERA for a question answering task:
+
+1. Initialize the model using vera.models.initialize()
+2. Render your document using vera.rendering.text_to_image()
+3. Run inference to capture attention
+4. Extract evidence using vera.retrieval.extract_evidence_from_patches()
+5. Generate final answer with retrieved evidence
+
+This framework enables precise document understanding and accurate evidence extraction for complex question answering scenarios.
