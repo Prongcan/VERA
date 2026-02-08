@@ -4,7 +4,7 @@ VERA-based RAG with Visual Evidence Retrieval (使用新的 VERA 工具函数 AP
 
 这个版本使用了 vera 包中的工具函数，而不是自定义函数
 """
-
+#
 import os
 import sys
 from pathlib import Path
