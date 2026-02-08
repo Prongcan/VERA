@@ -14,10 +14,6 @@ ROOT = FILE.parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# 假设 VLM_and_LLM 在 ROOT 下
-if str(ROOT / "VLM_and_LLM") not in sys.path:
-    sys.path.insert(0, str(ROOT / "VLM_and_LLM"))
-
 # 添加PyTorch内存优化环境变量
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
@@ -43,11 +39,9 @@ def is_question_processed(save_path, qid, processed_qids):
     required_files = ["answer.txt", "context.txt", "gold_evidence.json"]
     return all(os.path.exists(os.path.join(save_path, f)) for f in required_files)
 
-# --- 模块导入 ---
-from models.wrapper import QwenEngine_img_no_eager, InferenceConfig
+# --- 模块导入 (使用新的 VERA API) ---
+from vera import models, rendering
 from data.dataset_loader import MusiqueLoader
-# 导入文本转图片函数
-from VLM_and_LLM.Text2img import process_single_text_evidence
 
 # --- 加载模型配置 ---
 MODEL_CONFIG_PATH = os.path.join(ROOT, "config/model_config.json")
@@ -92,15 +86,12 @@ def main():
         print(f"Overriding font path with: {args.font_path}")
         render_config["font_path"] = args.font_path
 
-    # --- 2. 初始化引擎 ---
-    config = InferenceConfig(
+    # --- 2. 初始化引擎 (使用新的 VERA API) ---
+    print(f"Initializing VERA model from {args.model_path}...")
+    engine = models.initialize(
         model_path=args.model_path,
-        dataset_path=args.data_path,
-        save_base_dir=args.save_dir
+        model_type="qwen-img"
     )
-
-    print(f"Loading model from {args.model_path}...")
-    engine = QwenEngine_img_no_eager(config)
 
     print("Loading dataset...")
     loader = MusiqueLoader(args.data_path)
@@ -142,7 +133,7 @@ def main():
         gold_evidence = loader.extract_evidence(question)
 
         # 构建上下文
-        pid, full_text_context = loader.build_context(question, config.max_context_chars)
+        pid, full_text_context = loader.build_context(question, 100000000)
 
         # 定义保存路径
         save_path = os.path.join(
@@ -167,9 +158,9 @@ def main():
         # --- 4. 文本转图片 ---
         # print(f"Rendering images for Question {qid}...")
 
-        image_paths = process_single_text_evidence(
-            txt=full_text_context,
-            output_root=img_output_dir,
+        image_paths = rendering.text_to_image(
+            text=full_text_context,
+            output_dir=img_output_dir,
             config=render_config,
             evidence_text=gold_evidence  # 现在传递列表
         )
@@ -182,7 +173,12 @@ def main():
         prompt_context = "Please answer the question based on the document images provided."
 
         try:
-            res = engine.run(prompt_context, question_text, image_paths)
+            res = engine.run(
+                prompt_context=prompt_context,
+                question_text=question_text,
+                image_paths=image_paths,
+                is_mask_heads=False,  # 不使用 masking
+                heads_positions=None
 
             # --- 6. 保存结果 ---
 

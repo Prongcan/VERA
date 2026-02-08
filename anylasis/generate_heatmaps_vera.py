@@ -154,7 +154,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Update global variables
+    # 更新全局变量
     ROOT_DIR = args.root_dir
     OUTPUT_DIR = os.path.join(ROOT_DIR, args.output_folder)
     TOP_K_PATCHES = args.top_k
