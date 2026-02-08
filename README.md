@@ -176,9 +176,6 @@ python3 anylasis/evaluate_retrieval.py
 | Document | Description |
 |----------|-------------|
 | [Cookbook README](cookbook/README.md) | Detailed cookbook guide |
-| [Quick Start](cookbook/QUICKSTART.md) | Fast-track to running examples |
-| [Summary](cookbook/SUMMARY.md) | Complete feature summary |
-| [Usage Guide](vera/USAGE.md) | API documentation |
 
 ---
 
