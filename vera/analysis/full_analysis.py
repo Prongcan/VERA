@@ -199,7 +199,7 @@ def get_top_k_patch_pixel_bounds(attn_array, grid_h, grid_w, img_h, img_w, k=10)
 
         bounds_list.append((x1, y1, x2, y2))
 
-    return None
+    return bounds_list
 
 
 
@@ -380,18 +380,22 @@ def process_single_folder(
                         avg_attn_vector, grid_h, grid_w, h_img, w_img, k=top_k_patches
                     )
 
-                    word_mapping_path = find_word_mapping_path(folder_path, question_folder)
+                    word_mapping_path = find_word_mapping_path(question_folder, question_folder)
 
                     if word_mapping_path:
                         output_evidence_path = os.path.join(question_folder, "extracted_evidence.txt")
                         extract_evidence_from_patches(
                             patch_bounds, word_mapping_path, output_evidence_path
                         )
+                    else:
+                        print(f"  Warning: Could not find word_mapping.json for {question_folder}")
 
         return (folder_name, score_matrix, confidence_matrix)
 
     except Exception as e:
         print(f"Error processing {folder_path}: {e}")
+        import traceback
+        traceback.print_exc()
         return None if mode == 'scan' else None
 
 

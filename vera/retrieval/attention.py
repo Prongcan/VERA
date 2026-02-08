@@ -80,34 +80,49 @@ def find_word_mapping_path(folder_path: str, root_dir: str) -> Optional[str]:
     查找 word_mapping.json 文件路径
 
     Args:
-        folder_path: 文件夹路径
+        folder_path: 文件夹路径（question folder）
         root_dir: 根目录
 
     Returns:
         word_mapping.json 的完整路径，如果找不到则返回 None
     """
-    # 首先尝试本地目录
+    # 1. 首先尝试本地目录
     local_path = os.path.join(folder_path, "word_mapping.json")
     if os.path.exists(local_path):
         return local_path
 
-    # 从 folder_path 提取相对路径信息
+    # 2. 尝试在 rendered_images 子目录中查找
+    # folder_path 应该是 question folder，例如: root/paper_id/question_hash/
+    # word_mapping.json 通常在: root/paper_id/question_hash/rendered_images/{hash}/word_mapping.json
     try:
-        rendered_images_dir = os.path.dirname(folder_path.rstrip('/'))
-        question_folder = os.path.dirname(rendered_images_dir)
-        paper_folder = os.path.dirname(question_folder)
-
-        question_hash = os.path.basename(question_folder)
-        paper_id = os.path.basename(paper_folder)
-
-        target_rendered_images = os.path.join(root_dir, paper_id, question_hash, "rendered_images")
-
-        if os.path.exists(target_rendered_images):
-            for subdir in os.listdir(target_rendered_images):
-                word_mapping_path = os.path.join(target_rendered_images, subdir, "word_mapping.json")
+        # 检查 folder_path 是否是 question folder（包含 rendered_images 子目录）
+        rendered_images_dir = os.path.join(folder_path, "rendered_images")
+        if os.path.exists(rendered_images_dir):
+            # 遍历 rendered_images 下的子目录
+            for subdir in os.listdir(rendered_images_dir):
+                word_mapping_path = os.path.join(rendered_images_dir, subdir, "word_mapping.json")
                 if os.path.exists(word_mapping_path):
                     return word_mapping_path
-    except Exception:
+
+        # 3. 如果上面的方法失败，尝试从 folder_path 提取相对路径信息
+        # 这个逻辑处理 folder_path 可能是其他路径的情况
+        # 例如: folder_path 可能是 rendered_images/{hash}
+        if os.path.basename(folder_path) == "rendered_images" or "rendered_images" in folder_path:
+            # 找到 question folder
+            if "rendered_images" in folder_path:
+                parts = folder_path.split("rendered_images")
+                if len(parts) > 0:
+                    potential_question_folder = parts[0].rstrip(os.sep)
+                    # 重新尝试
+                    rendered_images_dir = os.path.join(potential_question_folder, "rendered_images")
+                    if os.path.exists(rendered_images_dir):
+                        for subdir in os.listdir(rendered_images_dir):
+                            word_mapping_path = os.path.join(rendered_images_dir, subdir, "word_mapping.json")
+                            if os.path.exists(word_mapping_path):
+                                return word_mapping_path
+
+    except Exception as e:
+        # 静默失败，返回 None
         pass
 
     return None
