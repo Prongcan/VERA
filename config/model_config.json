@@ -1,0 +1,7 @@
+{
+  "model_path": {
+    "qwen": "/data3/guofang/peirongcan/vllm_log/Qwen3-VL-8B-Instruct",
+    "glm": "/data3/guofang/peirongcan/vllm_log/GLM-4.1V-9B-Thinking",
+    "colpali": "vidore/colpali-v1.2"
+  }
+}
