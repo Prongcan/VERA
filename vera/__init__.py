@@ -6,6 +6,6 @@ VERA: Visual Evidence Retrieval and Analysis
 __version__ = "0.1.0"
 
 # 暴露主要 API
-from vera import models, rendering, retrieval, analysis
+from vera import models, rendering, retrieval, analysis, utils
 
-__all__ = ["models", "rendering", "retrieval", "analysis"]
+__all__ = ["models", "rendering", "retrieval", "analysis", "utils"]

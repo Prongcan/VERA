@@ -3,16 +3,10 @@ Text to image rendering module for VERA
 提供文本渲染为图像的功能
 """
 
-import sys
-from pathlib import Path
 from typing import List, Optional, Union
 
-# Add project root to path
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from scripts.word2png_function import text_to_images, text_to_images_evidence, load_config
+# Import internal rendering utilities
+from vera.rendering.internal.word2png_function import text_to_images, text_to_images_evidence, load_config
 
 
 def text_to_image(

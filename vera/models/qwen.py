@@ -11,13 +11,8 @@ from PIL import Image
 from typing import List, Dict, Optional, Set
 from transformers import AutoProcessor
 
-# Add parent directory to path for imports
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from models.modeling_qwen3_vl import Qwen3VLForConditionalGeneration_masked
+# Import internal model definitions
+from vera.models.internal.modeling_qwen3_vl import Qwen3VLForConditionalGeneration_masked
 from vera.models.base import BaseEngine, AttentionMonitor
 
 

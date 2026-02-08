@@ -180,7 +180,7 @@ def main():
                 question_text=question_text,
                 image_paths=image_paths,
                 is_mask_heads=False,  # 不使用 masking
-                heads_positions=None
+                heads_positions=None)
 
             # --- 6. 保存结果 ---
 

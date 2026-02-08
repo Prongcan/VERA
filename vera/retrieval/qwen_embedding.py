@@ -7,6 +7,7 @@ import os
 import sys
 import json
 import re
+import warnings
 from pathlib import Path
 from typing import List, Optional
 
@@ -17,6 +18,86 @@ from tqdm import tqdm
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
 
 
+def qwen_embedding_retrieve(
+    model_path: str,
+    context_text: str,
+    query: str,
+    top_k: int = 10
+) -> str:
+    """
+    使用 Qwen embedding 进行单样本检索
+
+    Args:
+        model_path: Qwen 模型路径
+        context_text: 文档文本内容
+        query: 查询文本
+        top_k: 返回 Top K 个句子
+
+    Returns:
+        str: 提取的文本上下文
+
+    Examples:
+        >>> from vera import retrieval
+        >>> context = retrieval.qwen_embedding_retrieve(
+        ...     model_path="/path/to/Qwen3-VL-8B-Instruct",
+        ...     context_text="This is the document text...",
+        ...     query="What is the main contribution?",
+        ...     top_k=10
+        ... )
+        >>> print(context)
+    """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    # Load model and processor (cached in module-level variable for efficiency)
+    if not hasattr(qwen_embedding_retrieve, '_model') or qwen_embedding_retrieve._model_path != model_path:
+        print(f"Loading model: {model_path}")
+        qwen_embedding_retrieve._model = Qwen3VLForConditionalGeneration.from_pretrained(
+            model_path,
+            torch_dtype=torch.bfloat16,
+            device_map=device,
+            trust_remote_code=True,
+        ).eval()
+        qwen_embedding_retrieve._processor = AutoProcessor.from_pretrained(
+            model_path,
+            trust_remote_code=True
+        )
+        qwen_embedding_retrieve._model_path = model_path
+        qwen_embedding_retrieve._device = device
+
+    model = qwen_embedding_retrieve._model
+    processor = qwen_embedding_retrieve._processor
+    device = qwen_embedding_retrieve._device
+
+    # Split context into sentences
+    sentences = _split_into_sentences(context_text)
+
+    if len(sentences) == 0:
+        return ""
+
+    # Get embeddings
+    question_embedding = _get_text_embedding(model, processor, query, device)
+    sentence_embeddings = _get_batch_text_embeddings(model, processor, sentences, device)
+
+    # Calculate similarity
+    question_embedding = question_embedding.float()
+    sentence_embeddings = sentence_embeddings.float()
+
+    question_norm = F.normalize(question_embedding, p=2, dim=-1)
+    sentence_norm = F.normalize(sentence_embeddings, p=2, dim=-1)
+
+    similarity = torch.matmul(sentence_norm, question_norm.squeeze(0))
+    similarity = similarity.cpu().numpy()
+
+    # Get Top K
+    k = min(top_k, len(sentences))
+    top_k_indices = np.argsort(similarity)[-k:][::-1]
+
+    top_sentences = [sentences[idx] for idx in top_k_indices]
+    extracted_text = "\n".join(top_sentences)
+
+    return extracted_text
+
+
 def qwen_embedding(
     model_path: str,
     data_path: str,
@@ -24,7 +105,11 @@ def qwen_embedding(
     top_k: int = 10
 ) -> dict:
     """
-    使用 Qwen embedding 进行检索
+    [DEPRECATED] 使用 Qwen embedding 进行检索
+
+    .. deprecated::
+        Use `qwen_embedding_retrieve()` instead. This function is kept for backward compatibility.
+        Users should handle file traversal in their own code.
 
     Args:
         model_path: Qwen 模型路径
@@ -36,28 +121,27 @@ def qwen_embedding(
         dict: 检索结果统计信息
 
     Examples:
+        >>> # Old API (deprecated)
         >>> stats = retrieval.qwen_embedding(
         ...     model_path="/path/to/Qwen3-VL-8B-Instruct",
         ...     data_path="tem/qasper_qwen_img",
         ...     save_dir="tem/qasper_qwen_img",
         ...     top_k=10
         ... )
-        >>> print(f"Processed: {stats['total']}, Success: {stats['success']}")
+        >>>
+        >>> # New API (recommended)
+        >>> context = retrieval.qwen_embedding_retrieve(
+        ...     model_path="/path/to/Qwen3-VL-8B-Instruct",
+        ...     context_text="This is the document text...",
+        ...     query="What is X?",
+        ...     top_k=10
+        ... )
     """
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    # Load model and processor
-    print(f"Loading model: {model_path}")
-    model = Qwen3VLForConditionalGeneration.from_pretrained(
-        model_path,
-        torch_dtype=torch.bfloat16,
-        device_map=device,
-        trust_remote_code=True,
-    ).eval()
-
-    processor = AutoProcessor.from_pretrained(
-        model_path,
-        trust_remote_code=True
+    warnings.warn(
+        "retrieval.qwen_embedding() is deprecated. Use retrieval.qwen_embedding_retrieve() instead. "
+        "File traversal should be handled in user code.",
+        DeprecationWarning,
+        stacklevel=2
     )
 
     # Find all question folders
@@ -69,6 +153,12 @@ def qwen_embedding(
             folders.append(root)
 
     print(f"Found {len(folders)} question folders")
+
+    # Load processor for question extraction
+    processor = AutoProcessor.from_pretrained(
+        model_path,
+        trust_remote_code=True
+    )
 
     # Process each folder
     stats = {"total": len(folders), "success": 0, "failed": 0, "errors": []}
@@ -106,34 +196,13 @@ def qwen_embedding(
                 stats["errors"].append((folder_name, "Empty context.txt"))
                 continue
 
-            # Split context into sentences
-            sentences = _split_into_sentences(context)
-
-            if len(sentences) == 0:
-                stats["failed"] += 1
-                stats["errors"].append((folder_name, "No valid sentences"))
-                continue
-
-            # Get embeddings
-            question_embedding = _get_text_embedding(model, processor, question, device)
-            sentence_embeddings = _get_batch_text_embeddings(model, processor, sentences, device)
-
-            # Calculate similarity
-            question_embedding = question_embedding.float()
-            sentence_embeddings = sentence_embeddings.float()
-
-            question_norm = F.normalize(question_embedding, p=2, dim=-1)
-            sentence_norm = F.normalize(sentence_embeddings, p=2, dim=-1)
-
-            similarity = torch.matmul(sentence_norm, question_norm.squeeze(0))
-            similarity = similarity.cpu().numpy()
-
-            # Get Top K
-            k = min(top_k, len(sentences))
-            top_k_indices = np.argsort(similarity)[-k:][::-1]
-
-            top_sentences = [sentences[idx] for idx in top_k_indices]
-            extracted_text = "\n".join(top_sentences)
+            # Use the new API
+            extracted_text = qwen_embedding_retrieve(
+                model_path=model_path,
+                context_text=context,
+                query=question,
+                top_k=top_k
+            )
 
             # Save results
             with open(output_path, 'w', encoding='utf-8') as f:

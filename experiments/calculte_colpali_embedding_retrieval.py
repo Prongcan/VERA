@@ -2,12 +2,15 @@
 ColPali Embedding 检索脚本 (使用 VERA API)
 使用 ColPali 模型进行 embedding 检索
 检索出与 question 相关度排名前 K 的 patch，提取对应文字
+
+Note: This script now uses the new retrieval.colpali_retrieve() API
 """
 
 import os
 import sys
 import json
 from pathlib import Path
+from typing import Optional
 
 # ================= 配置区域 =================
 # 路径设置
@@ -46,8 +49,73 @@ OVERLAP = 0
 # ===========================================
 
 
+def find_image_in_folder(folder_path: str) -> Optional[str]:
+    """在文件夹中查找图像文件"""
+    # First try merged.png in current folder
+    merged_path = os.path.join(folder_path, "merged.png")
+    if os.path.exists(merged_path):
+        return merged_path
+
+    # Try to find in rendered_images subdirectory
+    for root, dirs, files in os.walk(folder_path):
+        if "merged_evidence.png" in files:
+            return os.path.join(root, "merged_evidence.png")
+        elif "merged.png" in files:
+            return os.path.join(root, "merged.png")
+        # Fallback to any PNG
+        elif files:
+            png_files = [f for f in files if f.endswith('.png')]
+            if png_files:
+                return os.path.join(root, png_files[0])
+
+    return None
+
+
+def find_word_mapping_in_folder(folder_path: str) -> Optional[str]:
+    """在文件夹中查找 word_mapping.json"""
+    for root, dirs, files in os.walk(folder_path):
+        if "word_mapping.json" in files:
+            return os.path.join(root, "word_mapping.json")
+    return None
+
+
+def extract_question_from_tokens(input_tokens_path: str, tokenizer) -> Optional[str]:
+    """Extract question text from input_tokens.json"""
+    if not os.path.exists(input_tokens_path) or tokenizer is None:
+        return None
+
+    try:
+        with open(input_tokens_path, 'r', encoding='utf-8') as f:
+            tokens = json.load(f)
+
+        vision_end_idx = None
+        for i, token in enumerate(tokens):
+            if token == '<|vision_end|>':
+                vision_end_idx = i
+                break
+
+        if vision_end_idx is None:
+            return None
+
+        question_tokens = []
+        for i in range(vision_end_idx + 1, len(tokens)):
+            token = tokens[i]
+            if token == '<|im_end|>':
+                break
+            question_tokens.append(token)
+
+        token_ids = tokenizer.convert_tokens_to_ids(question_tokens)
+        question_text = tokenizer.decode(token_ids, skip_special_tokens=True)
+        return question_text.strip()
+
+    except Exception:
+        return None
+
+
 def main():
     import argparse
+    from tqdm import tqdm
+    from transformers import AutoProcessor
 
     parser = argparse.ArgumentParser(description="ColPali Retrieval using VERA API")
     parser.add_argument("--model_name", type=str, default=MODEL_NAME,
@@ -66,22 +134,92 @@ def main():
     args = parser.parse_args()
 
     print("=" * 60)
-    print("ColPali Retrieval (using VERA API)")
+    print("ColPali Retrieval (using new VERA API)")
     print("=" * 60)
     print(f"Model: {args.model_name}")
     print(f"Data: {args.data_path}")
     print(f"Top K: {args.top_k}")
     print("=" * 60)
 
-    # 调用 vera.retrieval.colpali 函数
-    stats = retrieval.colpali(
-        model_name=args.model_name,
-        data_path=args.data_path,
-        save_dir=args.save_dir,
-        top_k=args.top_k,
-        overlap=args.overlap,
-        qwen_model_path=args.qwen_model_path
+    # Load Qwen tokenizer for question extraction
+    qwen_processor = AutoProcessor.from_pretrained(
+        args.qwen_model_path,
+        trust_remote_code=True
     )
+    qwen_tokenizer = qwen_processor.tokenizer
+
+    # Find all question folders (folders with input_tokens.json)
+    folders = []
+    for root, dirs, files in os.walk(args.data_path):
+        if "result" in root:
+            continue
+        if "input_tokens.json" in files:
+            folders.append(root)
+
+    print(f"Found {len(folders)} question folders")
+
+    # Process each folder using the new API
+    stats = {"total": len(folders), "success": 0, "failed": 0, "errors": []}
+
+    for folder_path in tqdm(folders, desc="Processing with ColPali"):
+        try:
+            folder_name = os.path.basename(folder_path)
+
+            # Get file paths
+            input_tokens_path = os.path.join(folder_path, "input_tokens.json")
+
+            # Find word_mapping.json in subdirectories
+            word_mapping_path = find_word_mapping_in_folder(folder_path)
+            if word_mapping_path is None:
+                stats["failed"] += 1
+                stats["errors"].append((folder_name, "No word_mapping.json found"))
+                continue
+
+            # Find image
+            image_path = find_image_in_folder(folder_path)
+            if image_path is None:
+                stats["failed"] += 1
+                stats["errors"].append((folder_name, "No image found"))
+                continue
+
+            output_path = os.path.join(folder_path, "extracted_evidence_colpali.txt")
+
+            # Extract question
+            question = extract_question_from_tokens(input_tokens_path, qwen_tokenizer)
+            if question is None:
+                stats["failed"] += 1
+                stats["errors"].append((folder_name, "Failed to extract question"))
+                continue
+
+            # Clean question
+            prefix_marker = "Please answer the question based on the document images provided."
+            if question.startswith(prefix_marker):
+                question = question[len(prefix_marker):].strip()
+            cutoff_marker = "Please output your answer **directly**"
+            if cutoff_marker in question:
+                question = question.split(cutoff_marker)[0].strip()
+
+            # Use the new API: retrieval.colpali_retrieve()
+            extracted_text = retrieval.colpali_retrieve(
+                model_name=args.model_name,
+                image_path=image_path,
+                word_mapping_path=word_mapping_path,
+                query=question,
+                top_k=args.top_k,
+                overlap=args.overlap
+            )
+
+            # Save results
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(extracted_text)
+
+            stats["success"] += 1
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            stats["failed"] += 1
+            stats["errors"].append((folder_name, str(e)))
 
     # 打印统计信息
     print("\n" + "=" * 60)
