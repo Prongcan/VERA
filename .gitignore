@@ -25,3 +25,4 @@ env/
 venv/
 ENV/
 .env
+=2.8.0

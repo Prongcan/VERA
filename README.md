@@ -2,13 +2,7 @@
 
 # 👀 VERA: Visual Evidence Retrieval Augmentation
 
-### VLM Attention Capturing, Masking, Analysis, Visualization and Utilization
-
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
-[![CUDA](https://img.shields.io/badge/CUDA-12.1-76b900.svg)](https://developer.nvidia.com/cuda-toolkit)
-
-*Codebase of paper: VERA: Identifying and Leveraging Visual Evidence Retrieval Heads in Long-Context Understanding*
+*Official repository for the paper: VERA: Identifying and Leveraging Visual Evidence Retrieval Heads in Long-Context Understanding*
 
 </div>
 
@@ -16,52 +10,25 @@
 
 ## 📋 Table of Contents
 
-- [✨ Overview](#-overview)
+- [✨ Introduction](#-Introduction)
 - [🚀 Quick Start](#-quick-start)
 - [📖 Documentation](#-documentation)
 
 ---
 
-## ✨ Overview
+## ✨ Introduction
 
-VERA provides a comprehensive toolkit for VLM attention capture, masking, analysis, and utilization for retrieval tasks.
+We identify **Visual Evidence Retrieval (VER) Heads** — a sparse, dynamic set of attention heads critical for locating visual cues during reasoning. Masking these heads leads to significant performance degradation. Leveraging this discovery, we propose **VERA** (Visual Evidence Retrieval Augmentation), a training-free framework that detects model uncertainty to trigger the explicit verbalization of visual evidence attended by VER heads.
 
-| Feature | Description |
-|---------|-------------|
-| 🎯 **Attention-Based Retrieval** | Extract relevant information using attention mechanisms from large vision-language models |
-| 🎨 **Document Rendering** | Convert text to document images with customizable fonts and layouts |
-| 🔍 **Evidence Highlighting** | Automatically highlight important information in rendered documents |
-| 📊 **Attention Visualization** | Generate heatmaps and visualizations of model attention |
-| 🤖 **Head Masking** | Mask specific attention heads to analyze their contributions |
-| 🔄 **Multi-Stage Retrieval** | Combine attention-based and embedding-based retrieval methods |
-| 📈 **Batch Analysis** | Process multiple documents with full pipeline support |
-| 🎯 **RAG Integration** | End-to-end Retrieval-Augmented Generation for visual QA |
+This repository provides a toolkit for reproducing our experiments:
+1. **Capture attention** distributions (default: first token) or mask specific heads during inference
+2. **Analyze attention** and calculate VER scores to identify VER heads and capture their attention distributions
+3. **Verbalize evidence** and run the complete VERA pipeline
 
----
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         VERA Framework                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌──────────────┐      ┌──────────────┐      ┌──────────────┐ │
-│  │   Models     │      │  Rendering   │      │  Retrieval   │ │
-│  │              │      │              │      │              │ │
-│  │ • Qwen3-VL   │──────│ • Text→Img   │──────│ • Attention  │ │
-│  │ • Masking    │      │ • Evidence   │      │ • Embedding  │ │
-│  │ • Inference  │      │   Highlight  │      │ • Top-K Patches│ │
-│  └──────────────┘      └──────────────┘      └──────────────┘ │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │                    Analysis Module                        │  │
-│  │                                                           │  │
-│  │  • Heatmap Generation  • Top-K Extraction  • Statistics  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-In collaboration with Claude Code, I have refactored the original paper's codebase into a universal engine tool for VLM attention analysis and visualization. To ensure reusability and decoupling, some KV Cache acceleration optimizations have been omitted. The Thinking model code and complete datasets will be uploaded soon. The codebase is under active maintenance - contributions to add new model support are welcome!
+Pipeline of VERA:
+<p align="center">
+  <img src="figures/pipeline.png" alt="pipeline of VERA" width="80%"/>
+</p>
 
 ---
 
@@ -76,8 +43,7 @@ In collaboration with Claude Code, I have refactored the original paper's codeba
 
 ### Installation
 
-<details>
-<summary><b>1. Create Conda Environment</b></summary>
+#### 1. Create Conda Environment
 
 ```bash
 # Create new environment
@@ -85,10 +51,7 @@ conda create -n vera python=3.10 -y
 conda activate vera
 ```
 
-</details>
-
-<details>
-<summary><b>2. Install PyTorch & Flash Attention</b></summary>
+#### 2. Install PyTorch & Flash Attention
 
 ```bash
 # Install CUDA compiler
@@ -102,20 +65,14 @@ wget https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash
 pip install flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 ```
 
-</details>
-
-<details>
-<summary><b>3. Install Dependencies</b></summary>
+#### 3. Install Dependencies
 
 ```bash
 # Install all required packages
 pip install -r requirements.txt
 ```
 
-</details>
-
-<details>
-<summary><b>4. Configure Your Models</b></summary>
+### Configure Your Models
 
 Download models and add the local model paths to `config/model_config.json`.
 
@@ -135,39 +92,87 @@ local_dir = "./Qwen3-VL-8B"
 snapshot_download(repo_id=repo_id, local_dir=local_dir)
 ```
 
-</details>
+### Let's Begin!
 
-<details>
-<summary><b>5. Let's Begin!</b></summary>
+#### 1. Identify VER Heads
 
-Run the experiment scripts in the recommended order:
+Run this script to identify Visual Evidence Retrieval (VER) heads on a specific dataset. It will:
+- Render the document context as an image
+- Capture attention data from the first token
+- Save golden evidence and input tokens for analysis
+
+Configure your rendering settings in `config/config_en.json` before running.
 
 ```bash
-# Basic inference: renders images, captures first-token attention, word mapping, and answers
-# Outputs saved to tem/ directory with corresponding folder names
 python experiments/qasper_qwen_img.py
+```
 
-# Masked inference: runs inference with specified attention heads masked
-# Results saved to corresponding folders
+**Output**: Results are saved to the `tem/` directory with organized folder names for each sample.
+
+---
+
+#### 2. Mask Specific Attention Heads
+
+Mask specific attention heads during inference to observe the impact on model performance. This script masks VER heads on the Qasper dataset, allowing you to compare performance before and after masking. You can customize which heads to mask.
+
+```bash
 python3 experiments/qasper_qwen_img_masked.py
+```
 
-# VERA pipeline: runs the complete VERA retrieval pipeline
+**Purpose**: Demonstrates the critical role of VER heads by showing performance degradation when they are masked.
+
+---
+
+#### 3. Run VERA Pipeline
+
+Execute the complete VERA retrieval pipeline, which:
+- Detects model uncertainty
+- Extracts visual evidence attended by VER heads
+- Verbalizes the evidence explicitly
+- Re-runs inference with retrieved context
+
+```bash
 python3 experiments/qasper_qwen_RAG_VER.py
+```
 
-# Attention visualization and VERA evidence extraction
+**Output**: Enhanced responses with retrieved visual evidence incorporated into the context.
+
+---
+
+#### 4. Analyze Attention Patterns
+
+Generate visualizations and extract insights from attention patterns:
+
+```bash
 python3 anylasis/attention_data_anylasis.py
+```
 
-# Qwen Embedding baseline retrieval (optional, can be skipped)
+**Outputs**:
+- **Attention heatmaps**: Visual representation of attention distribution across image patches
+- **VER scores**: Quantitative scores identifying which attention heads are VER heads
+- **Top-k patches**: The most attended image patches for each query
+- **Statistical summary**: Aggregate statistics across all samples
+
+**Use Case**: Understand which attention heads are critical for visual evidence retrieval and how they distribute attention across document images.
+
+---
+
+#### 5. Retrieval Baselines (Optional)
+
+Compare VERA against baseline retrieval methods:
+
+```bash
+# Qwen Embedding retrieval
 python3 experiments/calculate_qwen_embedding_retrieval.py
 
-# Colpali baseline retrieval (optional, can be skipped)
+# ColPali retrieval
 python3 experiments/calculte_colpali_embedding_retrieval.py
 
-# Retrieval evaluation (optional, can be skipped)
+# Evaluate retrieval performance
 python3 anylasis/evaluate_retrieval.py
 ```
 
-</details>
+**Purpose**: Establish baselines for retrieval performance using embedding-based methods (Qwen, ColPali) and compare against attention-based VERA retrieval.
 
 ---
 
@@ -176,11 +181,10 @@ python3 anylasis/evaluate_retrieval.py
 | Document | Description |
 |----------|-------------|
 | [Cookbook README](cookbook/README.md) | Detailed cookbook guide |
+| [Dataset Guide](data/README.md) | Test dataset information |
 
 ---
 
 <div align="center">
-
-**Built with ❤️ for visual document understanding**
 
 </div>

@@ -1,32 +1,26 @@
-# VERA 测试数据集
+# VERA Test Dataset
 
-本目录包含从原Glyph项目迁移的测试数据样本，每个数据集只包含2-3个样本用于开发测试。
+This directory contains test data samples migrated from the original Glyph project. Each dataset contains only 2-3 samples for development and testing purposes. Full data will be released on Google Drive:(Coming soon)
 
-## 数据集列表
+## Dataset List
 
-- **qasper**: QA数据集，包含学术论文和问答对
-  - 文件: `qasper/qasper-test-sample.json`
-  - 样本数: 3个论文
+- **qasper**: QA dataset containing academic papers and question-answer pairs
+  - File: `qasper/qasper-test-sample.json`
+  - Samples: 3 papers
 
-- **hotpot**: 多跳问答数据集
-  - 文件: `hotpot/hotpot_dev_sample.jsonl`
-  - 样本数: 3个问题
-  - context文件: `hotpot/context/`
+- **hotpot**: Multi-hop question answering dataset
+  - File: `hotpot/hotpot_dev_sample.jsonl`
+  - Samples: 3 questions
+  - Context file: `hotpot/context/`
 
-- **docmath**: 文档数学问题数据集
-  - 文件: `docmath/docmath_sample.jsonl`
-  - 样本数: 3个问题
+- **docmath**: Document math problem dataset
+  - File: `docmath/docmath_sample.jsonl`
+  - Samples: 3 questions
 
-- **musique**: 多跳问答数据集
-  - 文件: `musique/musique_dev_sample.jsonl`
-  - 样本数: 3个问题
+- **musique**: Multi-hop question answering dataset
+  - File: `musique/musique_dev_sample.jsonl`
+  - Samples: 3 questions
 
-- **longbench_pro**: LongBench-Pro数据集
-  - 文件: `longbench_pro/longbench_pro_sample.json`
-  - 样本数: 3个问题
-
-## 数据来源
-
-原始数据位于: `/data3/guofang/peirongcan/deepseekOCR/Loong/Glyph/`
-
-迁移时间: 2026-02-07
+- **longbench_pro**: LongBench-Pro dataset
+  - File: `longbench_pro/longbench_pro_sample.json`
+  - Samples: 3 questions

@@ -1,122 +1,122 @@
 # VERA Cookbook - Visual Evidence Retrieval and Analysis
 
-这是一个完整的VERA引擎使用示例集合，展示各个模块的功能。
+This is a comprehensive collection of VERA engine usage examples, demonstrating the functionality of each module.
 
-## 目录结构
+## Directory Structure
 
 ```
 cookbook/
-├── README.md                          # 本文件
-├── 01_models_basic_inference.py      # 基础模型推理
-├── 02_models_masked_inference.py     # 掩盖注意力head的推理
-├── 03_rendering_basic.py             # 文本渲染为图像（基础）
-├── 04_rendering_with_evidence.py     # 文本渲染为图像（带evidence高亮）
-├── 05_retrieval_attention.py         # 基于注意力的检索
-├── 06_retrieval_qwen_embedding.py    # Qwen embedding检索
-├── 07_analysis_heatmap.py            # 热力图生成
-├── 08_analysis_full_pipeline.py      # 完整分析流程
-├── 09_end_to_end_rag.py              # 端到端RAG示例
-├── data/                             # 示例数据
+├── README.md                          # This file
+├── 01_models_basic_inference.py      # Basic model inference
+├── 02_models_masked_inference.py     # Inference with masked attention heads
+├── 03_rendering_basic.py             # Text to image rendering (basic)
+├── 04_rendering_with_evidence.py     # Text to image rendering (with evidence highlighting)
+├── 05_retrieval_attention.py         # Attention-based retrieval
+├── 06_retrieval_qwen_embedding.py    # Qwen embedding retrieval
+├── 07_analysis_heatmap.py            # Heatmap generation
+├── 08_analysis_full_pipeline.py      # Complete analysis pipeline
+├── 09_end_to_end_rag.py              # End-to-end RAG example
+├── data/                             # Sample data
 │   ├── sample_text.txt
 │   ├── sample_evidence.json
 │   └── sample_image.png
-└── output/                           # 输出目录
+└── output/                           # Output directory
 ```
 
-## 快速开始
+## Quick Start
 
-### 1. 基础推理 - 模型初始化和使用
+### 1. Basic Inference - Model Initialization and Usage
 ```bash
 python 01_models_basic_inference.py
 ```
-展示如何初始化Qwen3-VL模型并进行基础推理。
+Demonstrates how to initialize the Qwen3-VL model and perform basic inference.
 
-### 2. 掩盖注意力head的推理
+### 2. Inference with Masked Attention Heads
 ```bash
 python 02_models_masked_inference.py
 ```
-展示如何使用QwenEngineMasked来掩盖特定的注意力头。
+Demonstrates how to use QwenEngineMasked to mask specific attention heads.
 
-### 3. 文本渲染为图像
+### 3. Text to Image Rendering
 ```bash
 python 03_rendering_basic.py
 python 04_rendering_with_evidence.py
 ```
-展示如何将文本渲染为图像，以及如何高亮显示evidence。
+Demonstrates how to render text as images and how to highlight evidence.
 
-### 4. 检索功能
+### 4. Retrieval Functions
 ```bash
 python 05_retrieval_attention.py
 python 06_retrieval_qwen_embedding.py
 ```
-展示不同的检索方法：基于注意力的检索和基于embedding的检索。
+Demonstrates different retrieval methods: attention-based retrieval and embedding-based retrieval.
 
-### 5. 分析功能
+### 5. Analysis Functions
 ```bash
 python 07_analysis_heatmap.py
 python 08_analysis_full_pipeline.py
 ```
-展示如何生成热力图和进行完整的分析流程。
+Demonstrates how to generate heatmaps and perform complete analysis pipelines.
 
-### 6. 端到端RAG示例
+### 6. End-to-End RAG Example
 ```bash
 python 09_end_to_end_rag.py
 ```
-完整的RAG流程：渲染 → 推理 → 捕获注意力 → 提取evidence → 重新推理。
+Complete RAG pipeline: rendering → inference → attention capture → evidence extraction → re-inference.
 
-## 模块功能概览
+## Module Overview
 
-### vera.models - 模型推理模块
+### vera.models - Model Inference Module
 
-**功能**:
-- `models.initialize()` - 初始化模型引擎
-- `engine.run()` - 运行推理
-- 支持标准版本和带mask的版本
+**Features**:
+- `models.initialize()` - Initialize model engine
+- `engine.run()` - Run inference
+- Supports standard version and masked version
 
-**使用场景**:
-- 单轮/多轮图像问答
-- 注意力分析
-- 注意力头掩码实验
+**Use Cases**:
+- Single-turn/multi-turn image Q&A
+- Attention analysis
+- Attention head masking experiments
 
-### vera.rendering - 文本渲染模块
+### vera.rendering - Text Rendering Module
 
-**功能**:
-- `rendering.text_to_image()` - 将文本渲染为图像
-- 支持evidence高亮显示
+**Features**:
+- `rendering.text_to_image()` - Render text as image
+- Supports evidence highlighting
 
-**使用场景**:
-- 文档视觉化
-- 证据高亮显示
-- 为视觉模型准备输入
+**Use Cases**:
+- Document visualization
+- Evidence highlighting
+- Preparing input for vision models
 
-### vera.retrieval - 检索模块
+### vera.retrieval - Retrieval Module
 
-**功能**:
-- `retrieval.extract_evidence_from_patches()` - 从patch提取证据
-- `retrieval.qwen_embedding()` - Qwen embedding检索
-- `retrieval.colpali()` - ColPali检索
-- `retrieval.retrieve_by_attention()` - 完整的注意力检索流程
+**Features**:
+- `retrieval.extract_evidence_from_patches()` - Extract evidence from patches
+- `retrieval.qwen_embedding()` - Qwen embedding retrieval
+- `retrieval.colpali()` - ColPali retrieval
+- `retrieval.retrieve_by_attention()` - Complete attention retrieval pipeline
 
-**使用场景**:
-- 从文档中检索相关证据
-- 多种检索方法对比
-- RAG系统的检索部分
+**Use Cases**:
+- Retrieving relevant evidence from documents
+- Comparing multiple retrieval methods
+- Retrieval component of RAG systems
 
-### vera.analysis - 分析模块
+### vera.analysis - Analysis Module
 
-**功能**:
-- `analysis.create_heatmap()` - 创建注意力热力图
-- `analysis.get_top_k_patches()` - 获取Top-K patches
-- `analysis.run_full_analysis()` - 完整的三阶段分析
+**Features**:
+- `analysis.create_heatmap()` - Create attention heatmaps
+- `analysis.get_top_k_patches()` - Get Top-K patches
+- `analysis.run_full_analysis()` - Complete three-stage analysis
 
-**使用场景**:
-- 可视化注意力分布
-- 批量分析多个样本
-- 生成全局统计信息
+**Use Cases**:
+- Visualize attention distribution
+- Batch analyze multiple samples
+- Generate global statistics
 
-## 依赖说明
+## Dependencies
 
-确保已安装以下依赖：
+Ensure the following dependencies are installed:
 
 ```bash
 pip install torch transformers
@@ -124,22 +124,22 @@ pip install opencv-python numpy pillow tqdm
 pip install matplotlib seaborn
 ```
 
-可选依赖（用于ColPali检索）:
+Optional dependencies (for ColPali retrieval):
 ```bash
 pip install colpali-engine
 ```
 
-## 注意事项
+## Notes
 
-1. **模型路径**: 在运行示例前，请确保在代码中设置了正确的模型路径
-2. **CUDA内存**: 某些示例需要GPU，确保有足够的显存
-3. **配置文件**: 渲染模块需要config文件，默认使用`config/config_en.json`
-4. **输出目录**: 所有输出都会保存在`cookbook/output/`目录下
+1. **Model Paths**: Before running examples, ensure correct model paths are set in the code
+2. **CUDA Memory**: Some examples require GPU, ensure sufficient VRAM
+3. **Configuration Files**: Rendering module requires config files, defaults to `config/config_en.json`
+4. **Output Directory**: All outputs are saved in the `cookbook/output/` directory
 
-## 进阶使用
+## Advanced Usage
 
-查看各个示例文件中的详细注释，了解每个函数的参数和用法。
+Check detailed comments in each example file to understand function parameters and usage.
 
-## 问题反馈
+## Feedback
 
-如有问题，请查看VERA文档或提交issue。
+For questions, please refer to VERA documentation or submit an issue.
